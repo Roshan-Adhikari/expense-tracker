@@ -34,6 +34,18 @@ Copy `.env.example` to `.env` in the repo root and in `client/` as needed. See `
 - Frontend: build with `cd client && npm run build`, deploy `client/dist` (e.g. Vercel).
 - Backend: run `server` on Railway or similar; set `PORT` and `CLIENT_ORIGIN`.
 
+### Vercel (monorepo)
+
+This repo has the Vite app in `client/`. Use **one** of these approaches:
+
+1. **Recommended:** In the Vercel project → **Settings → General → Root Directory**, set **`client`**, then **Save** and **Redeploy**. Framework preset **Vite**, build output **`dist`** (default).
+
+2. **Or** leave Root Directory as the repo root: the root **`vercel.json`** already runs `cd client && npm run build` and publishes **`client/dist`**.
+
+If you see **404 NOT_FOUND** on your `*.vercel.app` URL, the deployment was not serving `client/dist` (wrong root). Fix Root Directory or rely on root `vercel.json`, then redeploy.
+
+Client-side routes (`/dashboard`, etc.) need the **`rewrites`** in `vercel.json` so refreshes do not 404.
+
 ## License
 
 MIT
