@@ -4,7 +4,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export function Login() {
-  const { user, login } = useAuth()
+  const { user, loading, configured, signIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from =
@@ -13,18 +13,39 @@ export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  if (user) return <Navigate to={from} replace />
+  if (configured && loading) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"
+          aria-label="Loading"
+        />
+      </div>
+    )
+  }
 
-  function handleSubmit(e: FormEvent) {
+  if (configured && user) return <Navigate to={from} replace />
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
+    if (!configured) {
+      setError('Add Supabase keys to client/.env.local — see README.')
+      return
+    }
     if (!email.trim() || !password) {
       setError('Enter email and password.')
       return
     }
-    const name = email.split('@')[0]?.replace(/[._]/g, ' ') ?? 'User'
-    login({ email: email.trim(), name: name.charAt(0).toUpperCase() + name.slice(1) })
+    setSubmitting(true)
+    const result = await signIn(email.trim(), password)
+    setSubmitting(false)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
     navigate(from, { replace: true })
   }
 
@@ -41,11 +62,24 @@ export function Login() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome back</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Demo login — Supabase auth hooks in next.
+            Sign in with the email and password you used to register.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {!configured ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+            <p className="font-medium">Supabase is not configured</p>
+            <p className="mt-2 text-amber-800/90 dark:text-amber-200/90">
+              Create a free project at supabase.com, run the SQL in{' '}
+              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">supabase/migrations/</code>, then add{' '}
+              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">VITE_SUPABASE_URL</code> and{' '}
+              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">VITE_SUPABASE_ANON_KEY</code> to{' '}
+              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">client/.env.local</code> and restart Vite.
+            </p>
+          </div>
+        ) : null}
+
+        <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Email
@@ -56,7 +90,8 @@ export function Login() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+              disabled={!configured || submitting}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
               placeholder="you@example.com"
             />
           </div>
@@ -70,9 +105,18 @@ export function Login() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+              disabled={!configured || submitting}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
               placeholder="••••••••"
             />
+          </div>
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
+              className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+            >
+              Forgot password?
+            </Link>
           </div>
           {error ? (
             <p className="text-sm text-red-600 dark:text-red-400" role="alert">
@@ -81,9 +125,10 @@ export function Login() {
           ) : null}
           <button
             type="submit"
-            className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700"
+            disabled={!configured || submitting}
+            className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
           >
-            Log in
+            {submitting ? 'Signing in…' : 'Log in'}
           </button>
         </form>
 

@@ -4,24 +4,52 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export function Signup() {
-  const { user, login } = useAuth()
+  const { user, loading, configured, signUp } = useAuth()
   const navigate = useNavigate()
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  if (user) return <Navigate to="/dashboard" replace />
+  if (configured && loading) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"
+          aria-label="Loading"
+        />
+      </div>
+    )
+  }
 
-  function handleSubmit(e: FormEvent) {
+  if (configured && user) return <Navigate to="/dashboard" replace />
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
+    setInfo('')
+    if (!configured) {
+      setError('Configure Supabase in client/.env.local first.')
+      return
+    }
     if (!name.trim() || !email.trim() || password.length < 6) {
       setError('Name, email, and password (6+ chars) required.')
       return
     }
-    login({ email: email.trim(), name: name.trim() })
+    setSubmitting(true)
+    const result = await signUp(name, email.trim(), password)
+    setSubmitting(false)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
+    if (result.needsEmailConfirmation) {
+      setInfo('Check your inbox to confirm your email, then log in.')
+      return
+    }
     navigate('/dashboard', { replace: true })
   }
 
@@ -38,11 +66,18 @@ export function Signup() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create account</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Local demo — wire Supabase for real sign-up & verification.
+            Your data stays private: Row Level Security limits access to your own rows.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {!configured ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+            Add <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">VITE_SUPABASE_*</code> to{' '}
+            <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">client/.env.local</code>.
+          </div>
+        ) : null}
+
+        <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
           <div>
             <label htmlFor="name" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Name
@@ -53,7 +88,8 @@ export function Signup() {
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+              disabled={!configured || submitting}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
               placeholder="Your name"
             />
           </div>
@@ -67,7 +103,8 @@ export function Signup() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+              disabled={!configured || submitting}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
               placeholder="you@example.com"
             />
           </div>
@@ -81,7 +118,8 @@ export function Signup() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+              disabled={!configured || submitting}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-brand-500 focus:border-brand-500 focus:ring-2 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
               placeholder="At least 6 characters"
             />
           </div>
@@ -90,11 +128,17 @@ export function Signup() {
               {error}
             </p>
           ) : null}
+          {info ? (
+            <p className="text-sm text-brand-700 dark:text-brand-300" role="status">
+              {info}
+            </p>
+          ) : null}
           <button
             type="submit"
-            className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700"
+            disabled={!configured || submitting}
+            className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
           >
-            Sign up
+            {submitting ? 'Creating…' : 'Sign up'}
           </button>
         </form>
 

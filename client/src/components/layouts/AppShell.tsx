@@ -32,7 +32,7 @@ function initials(name: string) {
 }
 
 export function AppShell() {
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [dark, setDark] = useState(() =>
     typeof document !== 'undefined'
@@ -101,8 +101,7 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => {
-              logout()
-              navigate('/')
+              void signOut().then(() => navigate('/'))
             }}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
           >

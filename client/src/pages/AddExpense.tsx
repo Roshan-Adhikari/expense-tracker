@@ -1,19 +1,62 @@
 import { type FormEvent, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { insertExpense } from '../lib/expenses'
 
 const categories = ['Food', 'Travel', 'Rent', 'Utilities', 'Entertainment', 'Others'] as const
 const splitTypes = ['Equal', 'Exact amounts', 'Percentage', 'Shares'] as const
 
+function todayISODate() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export function AddExpense() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
+  const [currency, setCurrency] = useState('INR')
   const [category, setCategory] = useState<(typeof categories)[number]>('Food')
   const [splitType, setSplitType] = useState<(typeof splitTypes)[number]>('Equal')
+  const [notes, setNotes] = useState('')
+  const [expenseDate, setExpenseDate] = useState(todayISODate())
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    // Persist via API + Supabase in a later iteration
-    alert('Expense saved locally (demo). Wire POST /api/expenses next.')
+    setError('')
+    if (!user) {
+      setError('You must be signed in.')
+      return
+    }
+    const parsed = parseFloat(amount.replace(/,/g, ''))
+    if (!title.trim() || Number.isNaN(parsed) || parsed < 0) {
+      setError('Enter a title and a valid amount.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await insertExpense({
+        user_id: user.id,
+        title: title.trim(),
+        amount: parsed,
+        currency,
+        category,
+        split_type: splitType,
+        notes: notes.trim() || null,
+        expense_date: expenseDate,
+      })
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save expense')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -25,7 +68,10 @@ export function AddExpense() {
         </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80">
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/80"
+      >
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Title
@@ -56,12 +102,27 @@ export function AddExpense() {
             <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Currency
             </label>
-            <select className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 dark:border-slate-600 dark:bg-slate-950 dark:text-white">
-              <option>INR</option>
-              <option>USD</option>
-              <option>EUR</option>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+            >
+              <option value="INR">INR</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
             </select>
           </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Date
+          </label>
+          <input
+            type="date"
+            value={expenseDate}
+            onChange={(e) => setExpenseDate(e.target.value)}
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+          />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -101,15 +162,23 @@ export function AddExpense() {
           </label>
           <textarea
             rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
             placeholder="Receipt details…"
           />
         </div>
+        {error ? (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            {error}
+          </p>
+        ) : null}
         <button
           type="submit"
-          className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700"
+          disabled={submitting}
+          className="w-full rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
         >
-          Save expense
+          {submitting ? 'Saving…' : 'Save expense'}
         </button>
       </form>
     </div>

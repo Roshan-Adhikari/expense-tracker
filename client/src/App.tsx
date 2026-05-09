@@ -10,6 +10,7 @@ import { Friends } from './pages/Friends'
 import { GroupDetail } from './pages/GroupDetail'
 import { Groups } from './pages/Groups'
 import { Landing } from './pages/Landing'
+import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
 import { NotFound } from './pages/NotFound'
 import { Profile } from './pages/Profile'
@@ -22,6 +23,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       <Route
         element={

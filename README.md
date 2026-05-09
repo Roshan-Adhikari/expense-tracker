@@ -29,6 +29,27 @@ Log in with any email/password on the demo auth screen (localStorage). Replace w
 
 Copy `.env.example` to `.env` in the repo root and in `client/` as needed. See `splitwise-cursor-prompt.md` for the full variable list.
 
+### Supabase (free database + email auth)
+
+1. Create a project at [supabase.com](https://supabase.com) (free tier).
+2. In **Project Settings → API**, copy **Project URL** and **anon public** key.
+3. Create **`client/.env.local`**:
+
+   ```env
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJ...
+   ```
+
+4. In **SQL Editor**, paste and run the migration in `supabase/migrations/20260509000000_initial.sql` (profiles + expenses + Row Level Security).
+5. In **Authentication → URL Configuration**, add your local and production URLs to **Redirect URLs** (e.g. `http://localhost:5173/**`, `https://your-app.vercel.app/**`).
+6. Optional: **Authentication → Providers → Email** — disable “Confirm email” while testing so sign-up logs in immediately; turn it back on for production.
+
+Restart `npm run dev` after changing env vars.
+
+On **Vercel**, add the same `VITE_SUPABASE_*` variables in **Project → Settings → Environment Variables**, then redeploy.
+
+Each signed-in user only sees their own rows: policies use `auth.uid()` on `profiles` and `expenses`.
+
 ## Deploy
 
 - Frontend: build with `cd client && npm run build`, deploy `client/dist` (e.g. Vercel).
