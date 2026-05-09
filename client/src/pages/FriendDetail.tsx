@@ -1,21 +1,50 @@
 import { ArrowLeft } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { demoFriends } from '../lib/demo'
+import { useAuth } from '../context/AuthContext'
+import { netBalanceWithFriend } from '../lib/balances'
+import { fetchExpenses, type ExpenseRow } from '../lib/expenses'
+import { formatExpenseDate, formatMoney } from '../lib/formatMoney'
 
 export function FriendDetail() {
-  const { id } = useParams()
-  const friend = demoFriends.find((f) => f.id === id)
+  const { id: friendId } = useParams()
+  const { user } = useAuth()
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([])
+  const [loading, setLoading] = useState(true)
 
-  if (!friend) {
-    return (
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="text-slate-600 dark:text-slate-400">Friend not found.</p>
-        <Link to="/friends" className="mt-4 inline-block text-brand-600 hover:underline dark:text-brand-400">
-          Back to friends
-        </Link>
-      </div>
-    )
-  }
+  useEffect(() => {
+    let cancelled = false
+    fetchExpenses()
+      .then((rows) => {
+        if (!cancelled && user && friendId) {
+          const shared = rows.filter((e) => {
+            const ids = new Set((e.expense_shares ?? []).map((s) => s.user_id))
+            return ids.has(user.id) && ids.has(friendId)
+          })
+          setExpenses(shared)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, friendId])
+
+  const net =
+    user && friendId ? netBalanceWithFriend(user.id, friendId, expenses) : 0
+
+  const subtitle = useMemo(() => {
+    if (!user || !friendId) return ''
+    const owingThem = net < 0
+    if (net === 0) return 'No balance between you on shared expenses.'
+    return owingThem
+      ? `You owe ${formatMoney(Math.abs(net), 'INR')} overall on splits with this person.`
+      : `They owe you ${formatMoney(net, 'INR')} overall on splits with this person.`
+  }, [net, user, friendId])
+
+  if (!friendId) return null
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -27,30 +56,48 @@ export function FriendDetail() {
         Friends
       </Link>
 
-      <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-lg font-semibold text-brand-800 dark:bg-brand-900/60 dark:text-brand-200">
-          {friend.name
-            .split(/\s+/)
-            .map((n) => n[0])
-            .join('')
-            .slice(0, 2)}
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{friend.name}</h1>
-          <p className="text-slate-500">{friend.email}</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Shared expenses</h1>
+        <p className="mt-2 text-slate-600 dark:text-slate-400">{subtitle}</p>
       </div>
 
       <Link
-        to={`/settle/${friend.id}`}
+        to={`/settle/${friendId}`}
         className="inline-flex rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
       >
-        Settle up
+        Record settlement (coming soon)
       </Link>
 
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
-        Shared expense timeline will render here after backend integration.
-      </div>
+      {loading ? (
+        <p className="text-sm text-slate-500">Loading…</p>
+      ) : expenses.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
+          No shared expenses yet. Add an expense and include both of you as participants.
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {expenses.map((item) => (
+            <li key={item.id}>
+              <Link
+                to={`/expenses/${item.id}`}
+                className="block rounded-xl border border-slate-200 bg-white px-4 py-3 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-800/80"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-white">{item.title}</p>
+                    <p className="text-sm text-slate-500">
+                      {item.category} · {formatExpenseDate(item.created_at)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-semibold tabular-nums text-slate-900 dark:text-white">
+                    {formatMoney(item.amount, item.currency)}
+                  </span>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

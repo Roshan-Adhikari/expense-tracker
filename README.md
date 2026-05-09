@@ -40,7 +40,11 @@ Copy `.env.example` to `.env` in the repo root and in `client/` as needed. See `
    VITE_SUPABASE_ANON_KEY=eyJ...
    ```
 
-4. In **SQL Editor**, paste and run the migration in `supabase/migrations/20260509000000_initial.sql` (profiles + expenses + Row Level Security).
+4. In **SQL Editor**, paste and run migrations in order:
+   - `supabase/migrations/20260509000000_initial.sql` (profiles + expenses + RLS)
+   - `supabase/migrations/20260509120000_friends_and_shared_expenses.sql` (friends, invites, shared splits, lookup RPC)
+
+   If the second file errors on `execute function`, replace it with `execute procedure` for the profile invite trigger line (depends on Postgres version).
 5. In **Authentication → URL Configuration**, add your local and production URLs to **Redirect URLs** (e.g. `http://localhost:5173/**`, `https://your-app.vercel.app/**`).
 6. Optional: **Authentication → Providers → Email** — disable “Confirm email” while testing so sign-up logs in immediately; turn it back on for production.
 

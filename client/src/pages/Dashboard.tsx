@@ -50,7 +50,7 @@ export function Dashboard() {
           Hello, {user?.name?.split(' ')[0] ?? 'there'}
         </h1>
         <p className="mt-1 text-slate-600 dark:text-slate-400">
-          Only your expenses are shown — enforced by Supabase Row Level Security.
+          Shows expenses you created or are split on — others cannot see your private data (RLS).
         </p>
       </div>
 
