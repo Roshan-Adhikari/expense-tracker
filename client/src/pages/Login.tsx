@@ -8,8 +8,9 @@ export function Login() {
   const { user, loading, configured, signIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from =
-    (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/dashboard'
+  const state = location.state as { from?: { pathname: string }; message?: string } | null
+  const from = state?.from?.pathname ?? '/dashboard'
+  const flashMessage = state?.message
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -68,6 +69,12 @@ export function Login() {
         </div>
 
         {!configured ? <SupabaseMissingBanner /> : null}
+
+        {flashMessage ? (
+          <p className="mt-6 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900 dark:border-brand-800 dark:bg-brand-950/40 dark:text-brand-100">
+            {flashMessage}
+          </p>
+        ) : null}
 
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
           <div>

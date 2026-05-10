@@ -52,10 +52,15 @@ If it still fails: redeploy again and open the deployment **Build Logs** — con
 
 In Supabase: **Authentication** → **URL Configuration**
 
-- **Site URL**: your Vercel URL, e.g. `https://your-app.vercel.app`
-- **Redirect URLs**: add  
-  `https://your-app.vercel.app/**`  
-  (and keep `http://localhost:5173/**` for local dev)
+- **Site URL**: your Vercel URL, e.g. `https://your-app.vercel.app`  
+  If this is still `http://localhost:5173`, **password reset emails will send people to localhost** or the wrong place. Set it to your **live** site.
+- **Redirect URLs**: add these (replace with your real host):
+  - `https://your-app.vercel.app/**`
+  - `https://your-app.vercel.app/auth/recovery`  
+  (wildcard often covers this, but listing it avoids surprises)  
+  Keep `http://localhost:5173/**` for local dev.
+
+**Forgot password** uses redirect `…/auth/recovery`. That path must be allowed here, and you must request the reset from the **same** domain you want in the link (e.g. request reset while on Vercel, not localhost, for production links).
 
 ---
 
