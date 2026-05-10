@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { type FormEvent, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { SupabaseMissingBanner } from '../components/SupabaseMissingBanner'
 import { useAuth } from '../context/AuthContext'
 
 export function Login() {
@@ -32,7 +33,7 @@ export function Login() {
     e.preventDefault()
     setError('')
     if (!configured) {
-      setError('Add Supabase keys to client/.env.local — see README.')
+      setError('Supabase is not configured in this build. See VERCEL.md on GitHub or the yellow box above.')
       return
     }
     if (!email.trim() || !password) {
@@ -66,18 +67,7 @@ export function Login() {
           </p>
         </div>
 
-        {!configured ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-            <p className="font-medium">Supabase is not configured</p>
-            <p className="mt-2 text-amber-800/90 dark:text-amber-200/90">
-              Create a free project at supabase.com, run the SQL in{' '}
-              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">supabase/migrations/</code>, then add{' '}
-              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">VITE_SUPABASE_URL</code> and{' '}
-              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">VITE_SUPABASE_ANON_KEY</code> to{' '}
-              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">client/.env.local</code> and restart Vite.
-            </p>
-          </div>
-        ) : null}
+        {!configured ? <SupabaseMissingBanner /> : null}
 
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
           <div>

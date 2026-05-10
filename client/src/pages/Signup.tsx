@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { type FormEvent, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { SupabaseMissingBanner } from '../components/SupabaseMissingBanner'
 import { useAuth } from '../context/AuthContext'
 
 export function Signup() {
@@ -32,7 +33,7 @@ export function Signup() {
     setError('')
     setInfo('')
     if (!configured) {
-      setError('Configure Supabase in client/.env.local first.')
+      setError('Supabase is not configured in this build. See VERCEL.md on GitHub.')
       return
     }
     if (!name.trim() || !email.trim() || password.length < 6) {
@@ -70,12 +71,7 @@ export function Signup() {
           </p>
         </div>
 
-        {!configured ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-            Add <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">VITE_SUPABASE_*</code> to{' '}
-            <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">client/.env.local</code>.
-          </div>
-        ) : null}
+        {!configured ? <SupabaseMissingBanner /> : null}
 
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 space-y-4">
           <div>

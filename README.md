@@ -23,7 +23,7 @@ cd server && npm install && npm run dev
 - App: [http://localhost:5173](http://localhost:5173)
 - API: [http://localhost:4000/health](http://localhost:4000/health)
 
-Log in with any email/password on the demo auth screen (localStorage). Replace with Supabase Auth when ready.
+Auth uses **Supabase** (email/password). Configure env vars locally and on Vercel — see **VERCEL.md** for production.
 
 ## Environment
 
@@ -50,7 +50,15 @@ Copy `.env.example` to `.env` in the repo root and in `client/` as needed. See `
 
 Restart `npm run dev` after changing env vars.
 
-On **Vercel**, add the same `VITE_SUPABASE_*` variables in **Project → Settings → Environment Variables**, then redeploy.
+### Production (Vercel) — required for live site
+
+Local `client/.env.local` is **ignored by Git** and **not** sent to Vercel. Your live site will show “Supabase is not configured” until you:
+
+1. Follow **[VERCEL.md](./VERCEL.md)** (step-by-step).
+2. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in **Vercel → Settings → Environment Variables** (enable **Production**).
+3. **Redeploy** after saving variables.
+
+**Never commit API keys to GitHub.**
 
 Each signed-in user only sees their own rows: policies use `auth.uid()` on `profiles` and `expenses`.
 

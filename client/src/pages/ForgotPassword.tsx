@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { type FormEvent, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { SupabaseMissingBanner } from '../components/SupabaseMissingBanner'
 import { useAuth } from '../context/AuthContext'
 
 export function ForgotPassword() {
@@ -43,6 +44,12 @@ export function ForgotPassword() {
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
           We&apos;ll email you a link to choose a new password (redirects back to this app&apos;s login).
         </p>
+
+        {!configured ? (
+          <div className="mt-6">
+            <SupabaseMissingBanner />
+          </div>
+        ) : null}
 
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-4">
           <div>
