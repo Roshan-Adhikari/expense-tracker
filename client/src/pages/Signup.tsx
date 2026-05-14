@@ -48,7 +48,9 @@ export function Signup() {
       return
     }
     if (result.needsEmailConfirmation) {
-      setInfo('Check your inbox to confirm your email, then log in.')
+      setInfo(
+        'This project still requires email confirmation in Supabase. Turn off “Confirm email” under Authentication → Providers → Email, then sign up again.',
+      )
       return
     }
     navigate('/dashboard', { replace: true })
@@ -66,9 +68,9 @@ export function Signup() {
             ET
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create account</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Your data stays private: Row Level Security limits access to your own rows.
-          </p>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          Email and password only — no inbox step if “Confirm email” is turned off in Supabase (see README).
+        </p>
         </div>
 
         {!configured ? <SupabaseMissingBanner /> : null}

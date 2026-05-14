@@ -46,7 +46,9 @@ Copy `.env.example` to `.env` in the repo root and in `client/` as needed. See `
 
    If the second file errors on `execute function`, replace it with `execute procedure` for the profile invite trigger line (depends on Postgres version).
 5. In **Authentication → URL Configuration**, add your local and production URLs to **Redirect URLs** (e.g. `http://localhost:5173/**`, `https://your-app.vercel.app/**`).
-6. Optional: **Authentication → Providers → Email** — disable “Confirm email” while testing so sign-up logs in immediately; turn it back on for production.
+
+6. **Skip email verification (sign up with email + password only)** — in Supabase go to **Authentication** → **Providers** → **Email**, then turn **off** **“Confirm email”** (wording may be *Enable email confirmations* — disable it). Save. New users are logged in immediately after sign-up with no inbox step.  
+   *Trade-off: anyone can register with any email they control; for stricter security, turn confirmations back on later.*
 
 Restart `npm run dev` after changing env vars.
 
